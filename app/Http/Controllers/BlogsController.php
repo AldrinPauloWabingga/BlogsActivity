@@ -1,95 +1,67 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Models\Blogs;
+use App\Http\Requests\StoreBlogRequest;
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Http\Request;
-use Illuminate\support\facade\DB;
-use app\Request\createValidationRequest;
+use App\Models\Blogs;
+use App\Models\User;
+use App\Models\Post;
 
 class BlogsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    
     public function index()
-    { 
-        $data =Blogs::all();
-        // dd($data->all());
-        return view ('index',['index'=>$data]);
-       
-
+    {
+        $blogs = Blogs::all();
+        $authors = User::all();
+        return view('dashboard', compact(['blogs','authors']));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        // $authors = Blogs::table('authors')->get();
-        // return view('createpost')->with('authors',$authors);
-
-        return view ('Login');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $request ->validate([
-            'author' => 'required',
-            'title' => 'required',
-           'summary' => 'required',
-            'context' => 'required',
-           'published_at' => 'required',
-        ]);
-        
-        $author = $request ->author;
-        $title = $request ->title;
-        $summary = $request -> summary;
-        $context = $request -> context;
-        $published_at = $request -> published_at;
-
-  
-        $Blogs = new Blogs();
-        $Blogs-> author  = $author;
-        $Blogs-> title = $title;
-        $Blogs-> summary = $summary;
-        $Blogs-> context= $context;
-        $Blogs-> published_at= $published_at;
-
-       $Blogs-> save(); 
-       return redirect()->route('blogs.index');
-        
-    }
-    
-    public function show(string $id)
-    {
+        $authors = User::all();
        
+        return view ('blogs.create', compact(['authors']));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    
+    public function store(StoreBlogRequest $request)
     {
-        //
+        Blogs::create($request->all());
+        return redirect (route('dashboard'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+   
+    public function show(Blogs $blog)
     {
-        //
+        $blogs = User::find($blog->user_id);
+       return view('blogs.show', compact(['blog']));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+   
+    public function edit(Blogs $blog)
     {
-        //
+        $author = User::find($blog->user_id);
+        return view('blogs.edit', compact(['blog','author']));
+    }
+
+    
+    public function update(Request $request, Blogs $Blog)
+    {
+        $Blog->update([
+            'title' => $request->title,
+            'summary' => $request->summary,
+            'content' => $request ->content,
+           ]);
+            return redirect(route('blogs.index'));
+    }
+
+   
+    public function destroy(Blogs $blog)
+    { 
+        $blog->delete();
+        return redirect(route('dashboard'));
     }
 }
